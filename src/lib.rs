@@ -27,11 +27,10 @@ impl Snake {
 
 #[wasm_bindgen]
 impl World {
-    pub fn new() -> World {
-        let width = 8;
+    pub fn new(width: usize, snake_idx: usize) -> World {
         World {
             width,
-            snake: Snake::new(10),
+            snake: Snake::new(snake_idx),
             size: width * width,
         }
     }
