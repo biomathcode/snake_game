@@ -1,7 +1,5 @@
 import init, { World } from "snake_game";
 
-// load webassembly than run the function
-
 init().then((_) => {
   const CELL_SIZE = 10;
   const world = World.new();
@@ -20,6 +18,7 @@ init().then((_) => {
       ctx.moveTo(CELL_SIZE * x, 0);
       ctx.lineTo(CELL_SIZE * x, worldWidth * CELL_SIZE);
     }
+
     for (let y = 0; y < worldWidth + 1; y++) {
       ctx.moveTo(0, CELL_SIZE * y);
       ctx.lineTo(worldWidth * CELL_SIZE, CELL_SIZE * y);
@@ -27,7 +26,24 @@ init().then((_) => {
     ctx.stroke();
   }
 
-  drawWorld();
+  function drawSnake() {
+    const snakeIdx = world.snake_head();
 
-  console.log(ctx);
+    const col = snakeIdx % worldWidth;
+    const row = Math.floor(snakeIdx / worldWidth);
+
+    ctx.beginPath();
+    ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    ctx.stroke();
+  }
+
+  drawWorld();
+  drawSnake();
+
+  setInterval(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawWorld();
+    drawSnake();
+    world.update();
+  }, 400);
 });
