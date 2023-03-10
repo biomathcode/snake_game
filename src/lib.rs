@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SnakeCell(usize);
 
 #[wasm_bindgen]
@@ -41,6 +41,7 @@ pub struct World {
     width: usize,
     snake: Snake,
     size: usize,
+    next_cell: Option<SnakeCell>, // Option => somevalue or none value
 }
 
 #[wasm_bindgen]
@@ -50,6 +51,7 @@ impl World {
             width,
             snake: Snake::new(snake_idx, 3),
             size: width * width,
+            next_cell: None,
         }
     }
 
@@ -68,6 +70,7 @@ impl World {
             return;
         }
 
+        self.next_cell = Some(next_cell);
         self.snake.direction = direction
     }
 
@@ -89,11 +92,17 @@ impl World {
     pub fn step(&mut self) {
         let temp = self.snake.body.clone();
 
-        let next_cell = self.gen_next_snake_cell(&self.snake.direction);
-        self.snake.body[0] = next_cell;
+        match self.next_cell {
+            Some(cell) => {
+                self.snake.body[0] = cell;
+                self.next_cell = None;
+            }
+            None => {
+                self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
+            }
+        }
 
         let len = self.snake.body.len();
-
         for i in 1..len {
             self.snake.body[i] = SnakeCell(temp[i - 1].0)
         }
