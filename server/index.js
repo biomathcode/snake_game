@@ -7,7 +7,7 @@ const path = require("path");
 const app = express();
 const port = process.env.PORT || 3000;
 
-const public = path.join(__dirname, "..", "view", "public");
+const public = path.join(__dirname, "public");
 
 app.use(compression());
 
@@ -20,3 +20,5 @@ app.get("*", (req, res) => {
 app.listen(port, () => {
   console.log("server is running");
 });
+
+module.exports = app;
