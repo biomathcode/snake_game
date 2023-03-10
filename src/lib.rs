@@ -21,6 +21,14 @@ pub enum Direction {
     LEFT,
 }
 
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum GameStatus {
+    WON,
+    LOST,
+    PLAYED,
+}
+
 struct Snake {
     body: Vec<SnakeCell>,
     direction: Direction,
@@ -47,7 +55,8 @@ pub struct World {
     snake: Snake,
     size: usize,
     next_cell: Option<SnakeCell>, // Option => somevalue or none value
-    reward_cell: usize,
+    reward_cell: Option<usize>,
+    status: Option<GameStatus>,
 }
 
 #[wasm_bindgen]
@@ -63,10 +72,11 @@ impl World {
             reward_cell: World::gen_reward_cell(size, &snake.body),
             snake,
             next_cell: None,
+            status: None,
         }
     }
 
-    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> usize {
+    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> Option<usize> {
         let mut reward_cell;
 
         loop {
@@ -75,20 +85,21 @@ impl World {
                 break;
             }
         }
-        reward_cell
+        Some(reward_cell)
     }
 
     pub fn get_w(&self) -> usize {
         self.width
     }
 
-    pub fn get_reward(&self) -> usize {
+    pub fn get_reward(&self) -> Option<usize> {
         self.reward_cell
     }
 
     pub fn snake_head(&self) -> usize {
         self.snake.body[0].0
     }
+
     pub fn change_direction(&mut self, direction: Direction) {
         let next_cell = self.gen_next_snake_cell(&direction);
 
@@ -110,6 +121,25 @@ impl World {
     pub fn snake_cells(&self) -> *const SnakeCell {
         self.snake.body.as_ptr()
     }
+    pub fn start_game(&mut self) {
+        self.status = Some(GameStatus::PLAYED)
+    }
+    pub fn end_game(&mut self) {
+        self.status = None
+    }
+
+    pub fn get_status(&self) -> Option<GameStatus> {
+        self.status
+    }
+
+    pub fn game_status_text(&self) -> String {
+        match self.status {
+            Some(GameStatus::WON) => String::from("You have won!"),
+            Some(GameStatus::LOST) => String::from("You have lost!"),
+            Some(GameStatus::PLAYED) => String::from("Playing"),
+            None => String::from("No Status"),
+        }
+    }
 
     //  cannot return a reference to JS because of borrowing rules
     // pub fn snake_cells(&self) -> &Vec<SnakeCell> {
@@ -117,26 +147,40 @@ impl World {
     // }
 
     pub fn step(&mut self) {
-        let temp = self.snake.body.clone();
+        match self.status {
+            Some(GameStatus::PLAYED) => {
+                let temp = self.snake.body.clone();
 
-        match self.next_cell {
-            Some(cell) => {
-                self.snake.body[0] = cell;
-                self.next_cell = None;
+                match self.next_cell {
+                    Some(cell) => {
+                        self.snake.body[0] = cell;
+                        self.next_cell = None;
+                    }
+                    None => {
+                        self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
+                    }
+                }
+
+                let len = self.snake.body.len();
+                for i in 1..len {
+                    self.snake.body[i] = SnakeCell(temp[i - 1].0)
+                }
+
+                if self.snake.body[1..self.snake_length()].contains(&self.snake.body[0]) {
+                    self.status = Some(GameStatus::LOST)
+                }
+
+                if self.reward_cell == Some(self.snake_head()) {
+                    if self.snake_length() < self.size {
+                        self.reward_cell = World::gen_reward_cell(self.size, &self.snake.body)
+                    } else {
+                        self.reward_cell = None;
+                        self.status = Some(GameStatus::WON)
+                    }
+                    self.snake.body.push(SnakeCell(self.snake.body[1].0));
+                }
             }
-            None => {
-                self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
-            }
-        }
-
-        let len = self.snake.body.len();
-        for i in 1..len {
-            self.snake.body[i] = SnakeCell(temp[i - 1].0)
-        }
-
-        if self.reward_cell == self.snake_head() {
-            self.snake.body.push(SnakeCell(self.snake.body[1].0));
-            self.reward_cell = World::gen_reward_cell(self.size, &self.snake.body)
+            _ => {}
         }
     }
 

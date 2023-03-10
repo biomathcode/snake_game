@@ -1,8 +1,12 @@
 import init, { World, Direction } from "snake_game";
 import { rnd } from "./utils/random";
 
+const startButton = document.getElementById("game-control-btn");
+
+const gameStatus = document.getElementById("game-status");
+
 init().then((wasm) => {
-  const CELL_SIZE = 10;
+  const CELL_SIZE = 30;
   const WORLD_WIDTH = 8;
   const SNAKE_SPAWN_IDX = rnd(WORLD_WIDTH * WORLD_WIDTH);
 
@@ -48,6 +52,17 @@ init().then((wasm) => {
     }
   });
 
+  startButton.addEventListener("click", () => {
+    const status = world.get_status();
+
+    if (status === undefined) {
+      world.start_game();
+      update();
+    } else {
+      location.reload();
+    }
+  });
+
   function drawWorld() {
     ctx.beginPath();
 
@@ -70,14 +85,16 @@ init().then((wasm) => {
       world.snake_length()
     );
 
-    snakeCells.forEach((cell, i) => {
-      const col = cell % worldWidth;
-      const row = Math.floor(cell / worldWidth);
-      ctx.fillStyle = i === 0 ? "#7878db" : "#000";
+    snakeCells
+      .filter((cell, i) => !(i > 0 && cell === snakeCells[0]))
+      .forEach((cell, i) => {
+        const col = cell % worldWidth;
+        const row = Math.floor(cell / worldWidth);
+        ctx.fillStyle = i === 0 ? "#7878db" : "#000";
 
-      ctx.beginPath();
-      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    });
+        ctx.beginPath();
+        ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      });
 
     ctx.stroke();
   }
@@ -93,12 +110,17 @@ init().then((wasm) => {
     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
     ctx.stroke();
+
+    if (rewardIdx == 1000) {
+      alert("you won");
+    }
   }
 
   function paint() {
     drawWorld();
     drawSnake();
     drawReward();
+    gameStatus.innerText = world.game_status_text();
   }
 
   function update() {
@@ -112,5 +134,4 @@ init().then((wasm) => {
   }
 
   paint();
-  update();
 });
