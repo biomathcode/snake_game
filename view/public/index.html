@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Assembly game</title>
+    <style>
+      .container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+      }
+      .game-panel {
+        margin-bottom: 20px;
+      }
+      .flex {
+        display: flex;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Canvas</h1>
+
+    <div class="container">
+      <div class="game-panel">
+        <div class="flex">
+          <div class="label">Status:</div>
+          <div class="" id="game-status">Start</div>
+        </div>
+        <div class="flex">
+          <div class="label">Points:</div>
+          <div class="" id="points">0</div>
+        </div>
+        <div class="flex">
+          <button id="game-control-btn">Play</button>
+        </div>
+      </div>
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="./bootstrap.js"></script>
+  </body>
+</html>
+
+<!-- i32, i64, f32, f64 -->
+
+<!-- ( module ( func $sum (param $a i32) (param $b i32) (result i32)
+  local.get $a
+  local.get $b
+
+  i32.add
+
+) 
+) -->

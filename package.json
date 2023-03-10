@@ -1,0 +1,17 @@
+{
+  "name": "snake_game_server",
+  "version": "1.0.0",
+  "description": "There is a glue code between webassembly and javascript allocation, rust is using the global and to reduce the size we will be using wee_alloc which will create a smaller allocation and smaller webassembly size",
+  "main": "server/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2"
+  }
+}
