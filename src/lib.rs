@@ -4,7 +4,12 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[derive(Clone, Copy)]
+#[wasm_bindgen(module = "/view/utils/random.js")]
+extern "C" {
+    fn rnd(max: usize) -> usize;
+}
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct SnakeCell(usize);
 
 #[wasm_bindgen]
@@ -16,7 +21,7 @@ pub enum Direction {
     LEFT,
 }
 
-pub struct Snake {
+struct Snake {
     body: Vec<SnakeCell>,
     direction: Direction,
 }
@@ -42,21 +47,43 @@ pub struct World {
     snake: Snake,
     size: usize,
     next_cell: Option<SnakeCell>, // Option => somevalue or none value
+    reward_cell: usize,
 }
 
 #[wasm_bindgen]
 impl World {
     pub fn new(width: usize, snake_idx: usize) -> World {
+        let snake = Snake::new(snake_idx, 3);
+
+        let size = width * width;
+
         World {
             width,
-            snake: Snake::new(snake_idx, 3),
-            size: width * width,
+            size,
+            reward_cell: World::gen_reward_cell(size, &snake.body),
+            snake,
             next_cell: None,
         }
     }
 
+    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> usize {
+        let mut reward_cell;
+
+        loop {
+            reward_cell = rnd(max);
+            if !snake_body.contains(&SnakeCell(reward_cell)) {
+                break;
+            }
+        }
+        reward_cell
+    }
+
     pub fn get_w(&self) -> usize {
         self.width
+    }
+
+    pub fn get_reward(&self) -> usize {
+        self.reward_cell
     }
 
     pub fn snake_head(&self) -> usize {
@@ -105,6 +132,11 @@ impl World {
         let len = self.snake.body.len();
         for i in 1..len {
             self.snake.body[i] = SnakeCell(temp[i - 1].0)
+        }
+
+        if self.reward_cell == self.snake_head() {
+            self.snake.body.push(SnakeCell(self.snake.body[1].0));
+            self.reward_cell = World::gen_reward_cell(self.size, &self.snake.body)
         }
     }
 
