@@ -1,9 +1,11 @@
-import init, { World, Direction } from "snake_game";
+import init, { World, Direction, GameStatus } from "snake_game";
 import { rnd } from "./utils/random";
 
 const startButton = document.getElementById("game-control-btn");
 
 const gameStatus = document.getElementById("game-status");
+
+const points = document.getElementById("points");
 
 init().then((wasm) => {
   const CELL_SIZE = 30;
@@ -104,6 +106,7 @@ init().then((wasm) => {
     const col = rewardIdx % worldWidth;
     const row = Math.floor(rewardIdx / worldWidth);
 
+    points.textContent = String(world.get_points());
     ctx.beginPath();
     ctx.fillStyle = "#ff0000";
 
@@ -125,7 +128,15 @@ init().then((wasm) => {
 
   function update() {
     const fps = 10;
+
+    const status = world.get_status();
+
+    if (status == GameStatus.WON || status == GameStatus.LOST) {
+      return;
+    }
+
     setTimeout(() => {
+      console.log("playing");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       world.step();
       paint();
